@@ -14,32 +14,34 @@ void Species::advance()
 	{
 		Particle &part  = particles[p];
 
-		// assume no force
-		double3 F{0,0,0};
-
-		/*update velocity */
-		part.vel += F;
-
-		double part_dt = world.getDt();
+		double part_dt = world.getDt(); // particle time step
 
 		bool alive = true;
 
-		while (part_dt>0 && alive) {
+		while (part_dt > 0 && alive) {
 			double3 pos_old = part.pos;		// save position prior to the push
 			part.pos += part.vel*part_dt;
-
-
-			/*did this particle leave the domain?*/
+			
+			/*** replace with "did this particle hit a wall, did this particle exit, how did this particl exit ***/
+			if (world.hitWall(part.pos) {
+				part.vel = sampleReflectedVelocity(part.pos, part.vel);
+			}
+			
+			
+			/* did this particle leave the domain? */ 
+			/* update such that inBounds only looks at z-normal surfaces and increments particles lost and particles gained */
 			if (!world.inBounds(part.pos))
 			{
 				alive = false;	//kill the particle
 			}
-			// CC: Particle will not be in a sphere for this project
-			else if (world.inSphere(part.pos)) {
-				double tp = world.lineSphereIntersect(pos_old,part.pos); // is this necessary
-				double dt_rem = (1-tp)*part_dt;
-				part_dt -= dt_rem;
-
+			
+			// particle hitting a wall
+			else if (world.hitWall(part.pos)) {
+				/* removed because there are no sphere's in this sim
+				double tp = world.lineSphereIntersect(pos_old, part.pos); // this is some kind of time parameter
+				double dt_rem = (1-tp)*part_dt; // amount of the time step remaining 
+				part_dt -= dt_rem;	// correct the particle time step
+				*/
 				//move particle *almost* to the surface
 				part.pos = 	pos_old + 0.999*tp*(part.pos-pos_old);
 				double v_mag1 = mag(part.vel);	//pre-impact speed
@@ -47,11 +49,12 @@ void Species::advance()
 				continue;
 			}
 			else {part_dt = 0;} // use up all time step
-
+			
+			// if the particle was killed
 			if (!alive) {
-				particles[p] = particles[np-1]; //fill the hole
-				np--;	//reduce count of valid elements
-				p--;	//decrement p so this position gets checked again
+				particles[p] = particles[np-1]; // fill the hole
+				np--;	// reduce count of valid elements
+				p--;	// decrement p so this position gets checked again
 			}
 		}
 	}
@@ -67,7 +70,8 @@ double3 Species::sampleReflectedVelocity(const double3 &pos, double v_mag1)
 	double v_th = sampleVth(1000); //assume T_sphere = 1000K
 	const double a_th = 1;		//thermal accommodation coeff
 	double v_mag2 = v_mag1 + a_th*(v_th-v_mag1);
-	return v_mag2*world.sphereDiffuseVector(pos); //set new velocity
+	//return v_mag2*world.sphereDiffuseVector(pos); //set new velocity
+	return v_mag2*world.wallDiffuseVector(pos); // set new velocity as it bounces off the wall
 }
 
 /*adds a new particle, rewinding velocity by half dt*/

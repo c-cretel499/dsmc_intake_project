@@ -62,13 +62,25 @@ struct World {
 	double getDt() const {return dt;}				// returns dt
 	bool advanceTime() {ts++; return ts<=max_ts;}
 	double getWallTime();							//returns wall time in seconds
-
+	
+	/* OLD
 	bool inBounds(double3 pos) {
 		for (int i=0;i<3;i++)
 			if (pos[i] < x0[i] || pos[i] >= xd[i]) return false;
 		return true;
 	}
-	/**/
+	*/
+	
+	// return false if particle reaches z boundaries
+	bool inBounds(double3 pos) {
+		if (pos[2] <x0[2] || pos[2] >= xd[2]) {
+			// add an increment here
+			return false;
+		}
+		else return true;
+	}
+	
+	/* return true if pos is on an x or y boundary*/
 	bool hitWall (double3 pos){}
 
 	/*converts physical position to logical coordinate*/
@@ -90,28 +102,8 @@ struct World {
 		sphere_x0 = x0; sphere_r = radius;
 	}
 
-	/* Can set 3 walls at a time, if an element of parallelPlane == 0, there is no wall on parallel to that plane.
-	offset should, for the sake of this code, only be set at the extrema of the boundaries*/
-	void addWalls(const double3 &parallelPlane, const double3 &offset) {
-		if (parallelPlane[0] == 1) {  } // The x faces should all be 
-		if (parallelPlane[1] == 1) {  }
-		if (parallelPlane[2] == 1) {  }
-	}
-
-	void isEnclosed(const bool& tube) {
-		using namespace std;
-		if (tube) {
-			cout << "The world is a tube" << endl;
-		}
-		else {
-			cout << "The world is NOT a tube" << endl;
-		}
-	}
-
 	/*return true if point x is inside or on the sphere*/
 	bool inSphere(const double3& x);
-
-	bool onEdge(const double3& x);
 
 	/*returns the parametric position for the intersection point*/
 	double lineSphereIntersect(const double3 &x1, const double3 &x2);
@@ -139,10 +131,6 @@ protected:
 	// Sphere 
 	double3 sphere_x0;		// sphere origin
 	double sphere_r = 0;		// sphere radius
-
-	// Wall
-	double3 wall_plane;
-	double wall_len; 
 
 	std::chrono::time_point<std::chrono::high_resolution_clock> time_start;	//time at simulation start
 
