@@ -7,48 +7,45 @@
 /*updates velocities and positions of all particles of this species*/
 void Species::advance()
 {
-
 	size_t np = particles.size();
-	/*loop over all particles*/
-	for (size_t p=0;p<np;p++)
-	{
+	/* loop over all particles */
+	for (size_t p=0; p<np; p++){
+		
 		Particle &part  = particles[p];
-
+		
+		// assume no force
+		double3 F{0,0,0};
+		// update particle velocity
+		part.vel += F;
+		
 		double part_dt = world.getDt(); // particle time step
 
 		bool alive = true;
-
+		// Lets check the time steps
 		while (part_dt > 0 && alive) {
 			double3 pos_old = part.pos;		// save position prior to the push
-			part.pos += part.vel*part_dt;
+			part.pos += part.vel*part_dt;	// push particle to its next position
 			
-			/*** replace with "did this particle hit a wall, did this particle exit, how did this particl exit ***/
-			if (world.hitWall(part.pos) {
-				part.vel = sampleReflectedVelocity(part.pos, part.vel);
-			}
-			
-			
-			/* did this particle leave the domain? */ 
-			/* update such that inBounds only looks at z-normal surfaces and increments particles lost and particles gained */
+			/* did this particle leave the domain? through the z-normal planes? */ 
 			if (!world.inBounds(part.pos))
 			{
 				alive = false;	//kill the particle
+				// increment particle counter for this time step... unsure how to do this
 			}
 			
-			// particle hitting a wall
+			/* Did this particle hit an x- or y- normal wall? */
 			else if (world.hitWall(part.pos)) {
-				/* removed because there are no sphere's in this sim
-				double tp = world.lineSphereIntersect(pos_old, part.pos); // this is some kind of time parameter
-				double dt_rem = (1-tp)*part_dt; // amount of the time step remaining 
-				part_dt -= dt_rem;	// correct the particle time step
-				*/
+				double tp = world.lineWallIntersect(pos_old, part.pos); // this is some kind of time parameter
+				double dt_rem = (1-tp) * part_dt;	// amount of the time step remaining 
+				part_dt -= dt_rem;					// correct the particle time step
+				
 				//move particle *almost* to the surface
 				part.pos = 	pos_old + 0.999*tp*(part.pos-pos_old);
 				double v_mag1 = mag(part.vel);	//pre-impact speed
-				part.vel = sampleReflectedVelocity(part.pos,v_mag1);
+				part.vel = Species::sampleReflectedVelocity(part.pos, v_mag1);
 				continue;
 			}
-			else {part_dt = 0;} // use up all time step
+			else {part_dt = 0;} // use up all time step and keep on moving
 			
 			// if the particle was killed
 			if (!alive) {
@@ -67,18 +64,20 @@ void Species::advance()
 /*returns random post-impact velocity*/
 double3 Species::sampleReflectedVelocity(const double3 &pos, double v_mag1)
 {
-	double v_th = sampleVth(1000); //assume T_sphere = 1000K
-	const double a_th = 1;		//thermal accommodation coeff
+	int T = 12000;					// wall temperature
+	double v_th = sampleVth(T); 	// assume T_wall = 1000K
+	const double a_th = 1;		  	// thermal accommodation coeff
 	double v_mag2 = v_mag1 + a_th*(v_th-v_mag1);
-	//return v_mag2*world.sphereDiffuseVector(pos); //set new velocity
-	return v_mag2*world.wallDiffuseVector(pos); // set new velocity as it bounces off the wall
+	double3 wdv = world.wallDiffuseVector(pos);
+	//std::cout << "Reflected vector = " << wdv << std::endl;
+	return v_mag2*wdv; // set new velocity as it bounces off the wall
 }
 
 /*adds a new particle, rewinding velocity by half dt*/
 void Species::addParticle(double3 pos, double3 vel)
 {
 	//don't do anything (return) if pos outside domain bounds [x0,xd)
-	if (!world.inBounds(pos)) return;
+	if (!world.inBounds(pos)) {return; std::cout<<"particle made outside bounds" << std::endl;}
 
 	double3 F{0,0,0};
 
@@ -106,7 +105,7 @@ double Species::sampleVth(double T)
 double3 Species::sampleIsotropicVel(double T) {
 	double theta = 2*Const::PI*rnd();
     double r = -1.0+2*rnd();    //pick a random direction for d[0]
-    double a = sqrt(1-r*r); //scaling for unity magnitude
+    double a = sqrt(1-r*r); 	//scaling for unity magnitude
 
     double3 d;
     d[0] = r;
@@ -162,6 +161,5 @@ void Species::sortParticlesToCells() {
 		int c = world.XtoC(part.pos);
 		cell_part_ids[c].push_back(p);
 	}
-
 }
 

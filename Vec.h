@@ -75,6 +75,7 @@ struct _vec3 {
     //sets all values to s
     void operator=(T s) {d[0]=s;d[1]=s;d[2]=s;}
 
+	// unit vector
 	friend _vec3<T> unit(const _vec3<T> &a) {
 		double m = mag(a);
 		return {a[0]/m,a[1]/m,a[2]/m};

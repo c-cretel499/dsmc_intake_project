@@ -38,11 +38,12 @@ public:
 
 	// samples random "thermal velocity" magnitude
 	double sampleVth(double T);
+	
 	// samples random vector for isotropic thermal velocity at temperature T
 	double3 sampleIsotropicVel(double T);
 	double3 sampleReflectedVelocity(const double3 &pos, double v_mag);
 
-	size_t getNp() {return particles.size();} // number of particles
+	size_t getNp() {return particles.size();} // number of particles that are created? or available
 	Particle& getParticle(int p) {return particles[p];}
 
 
@@ -55,6 +56,4 @@ protected:
 	std::vector<Particle> particles;  // particle array (contiguous memory)
 
 };
-
-
 #endif

@@ -45,13 +45,13 @@ struct World {
 		this->x0 = x0;
 		this->xd = xd;
 		int3 nn{ni,nj,nk};
-
+	
 		//set cell spacing
 		dh = (xd-x0)/(nn-1);
 	}
 
 	void setTime(double dt, int max_ts) {this->dt = dt; this->max_ts=max_ts;}
-
+	
 	double3 getX0() {return x0;}
 	double3 getXd() {return xd;}
 	double3 getDh() {return dh;}
@@ -63,25 +63,25 @@ struct World {
 	bool advanceTime() {ts++; return ts<=max_ts;}
 	double getWallTime();							//returns wall time in seconds
 	
-	/* OLD
-	bool inBounds(double3 pos) {
-		for (int i=0;i<3;i++)
-			if (pos[i] < x0[i] || pos[i] >= xd[i]) return false;
-		return true;
-	}
-	*/
+	
 	
 	// return false if particle reaches z boundaries
 	bool inBounds(double3 pos) {
-		if (pos[2] <x0[2] || pos[2] >= xd[2]) {
-			// add an increment here
+		if (pos[2] < x0[2] || pos[2] >= xd[2]) {
+			/*if (pos[2] < x0[2]) { wallHit[4]++;}
+			else {wallHit[5]++;}*/
 			return false;
 		}
 		else return true;
 	}
 	
 	/* return true if pos is on an x or y boundary*/
-	bool hitWall (double3 pos){}
+	bool hitWall(double3 pos){
+		if (pos[0] >= xd[0] || pos[0] <= 0) { 
+			return true; }
+		if (pos[1] >= xd[1] || pos[1] <= 0) { return true; }
+		return false;
+	}
 
 	/*converts physical position to logical coordinate*/
 	double3 XtoL(const double3 &x) const {
@@ -97,32 +97,45 @@ struct World {
 		return k*(ni-1)*(nj-1) + j*(ni-1) + i;
 	}
 
+	/* returns the time step fraction from a particle's current point to the point that it intersects the wall */
+	double lineWallIntersect(const double3 &x1, const double3 &x2);
+	
+	/* returns random diffuse velocity sampled at a given wall surface point*/
+	double3 wallDiffuseVector(const double3& x);
+
+
+	/*** Sphere calculations that are no longer used ***/
 	// sets sphere origin and radius
 	void addSphere(const double3 &x0, double radius) {
 		sphere_x0 = x0; sphere_r = radius;
 	}
+	
+	void wallColCount(double3 x);
 
 	/*return true if point x is inside or on the sphere*/
 	bool inSphere(const double3& x);
 
 	/*returns the parametric position for the intersection point*/
 	double lineSphereIntersect(const double3 &x1, const double3 &x2);
-
+	
 	/*returns random diffuse velocity sampled at a given surface point*/
 	double3 sphereDiffuseVector(const double3 &x);
-
-	/* returns random diffuse velocity sampled at a given wall surface point*/
-	double3 wallDiffuseVector(const double3& x);
 
 	const int ni, nj, nk; // number of mesh nodes
 	const int3 nn;  // number of nodes stored in an int3
 
 
+/*
+public:
+	int wallHit[6];
+*/
 protected:
 	double3 x0;
 	double3 dh;
 	double3 xd;		// diagonal corner from origin
 	double3 dp;		// momentum transfer, need to computer particle velocity changes for this
+	
+	int part_out;
 
 	double dt = 0;
 	int max_ts = 0;
