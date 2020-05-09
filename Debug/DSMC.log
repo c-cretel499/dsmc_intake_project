@@ -1,0 +1,7 @@
+﻿  Collisions.cpp
+D:\Work\Academics\ASTE 499-Applied Scientific Programming\Project\DSMC Intake\Collisions.cpp(35,40): error C2276: '&': illegal operation on bound member function expression
+D:\Work\Academics\ASTE 499-Applied Scientific Programming\Project\DSMC Intake\Collisions.cpp(35,10): error C2672: 'std::vector<std::thread,std::allocator<std::thread>>::emplace_back': no matching overloaded function found
+D:\Work\Academics\ASTE 499-Applied Scientific Programming\Project\DSMC Intake\Collisions.cpp(62,29): warning C4018: '<': signed/unsigned mismatch
+  Species.cpp
+D:\Work\Academics\ASTE 499-Applied Scientific Programming\Project\DSMC Intake\Species.cpp(36,23): warning C4018: '<': signed/unsigned mismatch
+  Generating Code...
