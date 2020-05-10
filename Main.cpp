@@ -20,7 +20,7 @@ Rnd rnd;
 
 int main() {
 	// set some simulation parameters
-	const double nd0   = 1.6e15;		// desired injection number density
+	const double nd0   = 1.6e15;	// desired injection number density
 	const double vel0  = 7850;		// injection velocity,
 	const int N_sample = 100;		// number of particles to create
 	
@@ -58,8 +58,8 @@ int main() {
 	Species neutrals("O2", 32 * Const::AMU, mpw, world);
 	
 	// WarmBeamSource is from Source.h 
-	ColdBeamSource source(neutrals, world, N_sample, vel0);
-	//WarmBeamSource source(neutrals, world, N_sample, vel0, 12000);
+	//ColdBeamSource source(neutrals, world, N_sample, vel0);
+	WarmBeamSource source(neutrals, world, N_sample, vel0, 12000);
 	
 	DSMC_MEX dsmc_mex(neutrals, world, 2); // 2 is instances to skip
 	
@@ -77,10 +77,8 @@ int main() {
 		if (world.getTs()%100==0) {
 			cout << "ts=" <<world.getTs()<<", np=" << neutrals.getNp()<< ", num_cols_inst=" << num_cols << endl;
 			Output::saveVTI(world, neutrals);
-		}
-		
+		}	
 	}
-	
 	// grab ending time
 	cout << " Simulation took " << world.getWallTime()<<"seconds" <<endl; // the simulation is not getting to this point, its ending early
 
