@@ -1,11 +1,12 @@
 #include <math.h>
 #include <iostream>
 #include "Species.h"
+#include "Source.h"
 #include "Field.h"
 #include "Vec.h"
 
 /*updates velocities and positions of all particles of this species*/
-void Species::advance()
+void Species::advance() // causing issues after 136 time steps
 {
 	size_t np = particles.size();
 	/* loop over all particles */
@@ -27,22 +28,24 @@ void Species::advance()
 			part.pos += part.vel*part_dt;	// push particle to its next position
 			
 			/* did this particle leave the domain? through the z-normal planes? */ 
-			if (!world.inBounds(part.pos))
-			{
+			if (!world.inBounds(part.pos)){
+				//std::cout << "particle left boundary" << std::endl;
 				alive = false;	//kill the particle
 				// increment particle counter for this time step... unsure how to do this
 			}
 			
 			/* Did this particle hit an x- or y- normal wall? */
 			else if (world.hitWall(part.pos)) {
+				//std::cout<<"particle hit wall" << std::endl;
 				double tp = world.lineWallIntersect(pos_old, part.pos); // this is some kind of time parameter
 				double dt_rem = (1-tp) * part_dt;	// amount of the time step remaining 
 				part_dt -= dt_rem;					// correct the particle time step
 				
 				//move particle *almost* to the surface
-				part.pos = 	pos_old + 0.999*tp*(part.pos-pos_old);
+				part.pos = 	pos_old + 0.99*tp*(part.pos-pos_old);
 				double v_mag1 = mag(part.vel);	//pre-impact speed
 				part.vel = Species::sampleReflectedVelocity(part.pos, v_mag1);
+				//std::cout << "pos, vel : " << part.pos << ", " << part.vel << std::endl;
 				continue;
 			}
 			else {part_dt = 0;} // use up all time step and keep on moving
@@ -64,13 +67,11 @@ void Species::advance()
 /*returns random post-impact velocity*/
 double3 Species::sampleReflectedVelocity(const double3 &pos, double v_mag1)
 {
-	int T = 12000;					// wall temperature
-	double v_th = sampleVth(T); 	// assume T_wall = 1000K
+	double T = 700;					// wall temperature, K
+	double v_th = sampleVth(T); 	// wall thermal velocity
 	const double a_th = 1;		  	// thermal accommodation coeff
 	double v_mag2 = v_mag1 + a_th*(v_th-v_mag1);
-	double3 wdv = world.wallDiffuseVector(pos);
-	//std::cout << "Reflected vector = " << wdv << std::endl;
-	return v_mag2*wdv; // set new velocity as it bounces off the wall
+	return v_mag2*world.wallDiffuseVector(pos); // set new velocity as it bounces off the wall
 }
 
 /*adds a new particle, rewinding velocity by half dt*/
@@ -90,8 +91,7 @@ void Species::addParticle(double3 pos, double3 vel)
 
 
 /*returns random thermal velocity*/
-double Species::sampleVth(double T)
-{
+double Species::sampleVth(double T){
 	//thermal velocity
 	double v_th = sqrt(2*Const::K*T/mass);
 	//get three random velocity components
