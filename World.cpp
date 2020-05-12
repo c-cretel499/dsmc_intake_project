@@ -14,28 +14,33 @@ double3 World::wallDiffuseVector(const double3& x)
 	// set n depending on what wall you're on
 	double3 n;
 	double3 t1;
-	double near = 0.005;
-	if ( x[0] - x0[0] <= near){ 
+	double near_x = dh[0] * 0.1;
+	double near_y = dh[1] * 0.1;
+	if ( x[0] - x0[0] <= near_x){ 
+		//std::cout << "Hit x=0 wall" << std::endl;
 		n = {1,0,0};
 		t1 = {0, rnd(), rnd()};
 		t1 = unit(t1);
-		
-		}
-	else if (x[1] - x0[1] <= near) { 
+	}
+	else if (x[1] - x0[1] <= near_y) { 
+		//std::cout << "Hit y=0 wall" << std::endl;
 		n = {0,1,0};
 		t1 = {rnd(),0,rnd()};
 		t1 = unit(t1);
 	}
-	else if (xd[0]-x[0] >= near) {
+	else if (xd[0]-x[0] <= near_x ) {
+		//std::cout << "Hit x=xd wall" << std::endl;
 		n = {-1,0,0};
 		t1 = {0,rnd(),rnd()};
 		t1 = unit(t1);
 	}
-	else if (xd[1]-x[1] >= near) { 
+	else if (xd[1]-x[1] <= near_y ) { 
+		//std::cout << "Hit y=yd wall" << std::endl;
 		n = {0,-1,0};
 		t1 = {rnd(),0,rnd()};
 		t1 = unit(t1);
 	}
+	
 	double3 t2 = cross(n, t1); 			//second tangent
 	
 	return sin_theta * cos(psi) * t1 + sin_theta * sin(psi) * t2 + cos_theta * n;

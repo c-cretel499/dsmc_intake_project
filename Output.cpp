@@ -18,7 +18,7 @@ void Output::saveVTI(World &world, Species &sp)
 
     /*open output file*/
     ofstream out(name.str());
-   	if (!out.is_open()) {cerr<<"Could not open "<<name.str()<<endl;return;} // It's saying it couldn't open the VTI 
+   	if (!out.is_open()) {cerr<<"Could not open "<<name.str()<<endl;return;}
 
 	/*ImageData is vtk format for structured Cartesian meshes*/
 	out<<"<VTKFile type=\"ImageData\">\n";
